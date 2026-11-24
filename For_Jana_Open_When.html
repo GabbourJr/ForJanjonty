@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="en"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwNTk1MjY3NjYwMTI3NTA2MTkwMiIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2Y1NDg3Y2M5NGJjNzU2NjRfamFuYV9vcGVuX3doZW4uaHRtbC0zMTUifSwiZXhwIjoxNzk1NTE3NDQ1LCJpYXQiOjE3OTU1MTM4NDUsImFsZyI6IlJTMjU2In0.XWFWlZlmK_BPAacWxud8mJsn7RVFcu3DpsWGiIhLxq1b9PGQnPdh8NpfVN37vMuaKcdDz380Hy1ocwrpwH8MD_ktAsAL2g0RYOqgrurdTJEWH_O3EgtN3QOFyAlbkUAgTxstV_wiQPG_Fre6VRT50a7i59P5fchqlDGBB2ArIRZH22XWB_a4xD-SkU4ib_GFaXlikV05Zl5pU3hx-V9A2-wbiWqZHYbSvRVM5mxIYzs_8SGHrMief61cpeEK_T0b7dMIe131bK0Je2hOfIPRQLMg6phsSw67NZEHsF4fLhPKrKWTajwU9LB7hTJoVk2CX6bkAGJBnpN9BEbVwt2I_g","c_f5487cc94bc75664_jana_open_when.html-315")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.i=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.extensions="";var l=0,t=null,r=null,q=[],F=new TextEncoder,
+G=new TextDecoder;c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*
+16|0;return(f==="x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;
+(g=t)==null||g.postMessage(a)}};Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  const OVERLAY_SELECTOR =
+    'dialog[open], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="combobox"]';
+
+  function isVisibleOverlay(element) {
+    if (element.closest('[hidden], [aria-hidden="true"], [inert]')) {
+      return false;
+    }
+    if (window.getComputedStyle(element).visibility === 'hidden') {
+      return false;
+    }
+    for (let cur = element; cur; cur = cur.parentElement) {
+      if (window.getComputedStyle(cur).display === 'none') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function hasOpenOverlay() {
+    const candidates = document.querySelectorAll(OVERLAY_SELECTOR);
+    for (let i = 0; i < candidates.length; i++) {
+      if (isVisibleOverlay(candidates[i])) {
+        return true;
+      }
+    }
+    try {
+      if (document.querySelector('[popover]:popover-open')) {
+        return true;
+      }
+    } catch (e) {
+      // Ignore engines that do not support :popover-open.
+    }
+    return false;
+  }
+
+  function isNonEmptySearchInput(target) {
+    return (
+      Boolean(target) &&
+      target.tagName === 'INPUT' &&
+      typeof target.type === 'string' &&
+      target.type.toLowerCase() === 'search' &&
+      typeof target.value === 'string' &&
+      target.value.length > 0
+    );
+  }
+
+  function shouldIgnoreEscape(event) {
+    return (
+      event.key !== 'Escape' ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.isComposing ||
+      event.repeat ||
+      event.keyCode === 229 ||
+      isNonEmptySearchInput(event.target)
+    );
+  }
+
+  let shouldIgnoreCaptureState = false;
+
+  window.addEventListener(
+    'keydown',
+    function(event) {
+      if (event.key === 'Escape') {
+        shouldIgnoreCaptureState =
+          hasOpenOverlay() || isNonEmptySearchInput(event.target);
+      }
+    },
+    {capture: true},
+  );
+
+  window.addEventListener('keydown', function(event) {
+    if (
+      shouldIgnoreEscape(event) ||
+      event.defaultPrevented ||
+      shouldIgnoreCaptureState
+    ) {
+      return;
+    }
+    const wasBlockedOnCapture = shouldIgnoreCaptureState;
+    queueMicrotask(function() {
+      if (event.defaultPrevented || wasBlockedOnCapture) {
+        return;
+      }
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({'type': 'escapeKey'}, '*');
+      }
+    });
+  });
+})();</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Janjonty, ro7 qalby... Open this whenever...</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for cozy, romantic, and gentle typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&amp;family=Lora:ital,wght@0,400;0,500;1,400&amp;family=Quicksand:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-pink-light: #FFF3F6;
+      --bg-pink-mid: #FFE4EC;
+      --bg-pink-deep: #FAD2DF;
+      --paper-cream: #FFFDF9;
+      --ink-brown: #5A4348;
+      --ink-soft: #85666D;
+      --accent-rose: #F28BA8;
+      --accent-rose-dark: #D96B8A;
+    }
+
+    body {
+      font-family: 'Quicksand', sans-serif;
+      color: var(--ink-brown);
+      background: linear-gradient(135deg, var(--bg-pink-light) 0%, var(--bg-pink-mid) 50%, var(--bg-pink-deep) 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Subtle soft paper grain texture overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+      background-image: radial-gradient(#e8a5b8 0.75px, transparent 0.75px), radial-gradient(#e8a5b8 0.75px, var(--bg-pink-light) 0.75px);
+      background-size: 32px 32px;
+      background-position: 0 0, 16px 16px;
+    }
+
+    .font-handwriting {
+      font-family: 'Caveat', cursive;
+    }
+
+    .font-serif-letter {
+      font-family: 'Lora', serif;
+    }
+
+    /* Gentle breathing & floating animations for baby animal stickers */
+    @keyframes gentleBreathe {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-5px) scale(1.02); }
+    }
+
+    @keyframes gentleSway {
+      0%, 100% { transform: rotate(-2deg) translateY(0px); }
+      50% { transform: rotate(2deg) translateY(-4px); }
+    }
+
+    @keyframes zzzFloat {
+      0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
+      50% { opacity: 0.85; transform: translate(4px, -8px) scale(1); }
+      100% { opacity: 0; transform: translate(8px, -16px) scale(1.1); }
+    }
+
+    .sticker-breathe {
+      animation: gentleBreathe 5s ease-in-out infinite;
+    }
+
+    .sticker-sway {
+      animation: gentleSway 6s ease-in-out infinite;
+    }
+
+    .zzz-anim {
+      animation: zzzFloat 3.5s ease-in-out infinite;
+    }
+
+    /* Sticker white die-cut border effect */
+    .kawaii-sticker {
+      filter: drop-shadow(0 4px 8px rgba(185, 110, 130, 0.16));
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .kawaii-sticker:hover {
+      transform: scale(1.08) rotate(3deg);
+    }
+
+    /* Envelope Card Styling & Hover Animation */
+    .envelope-card {
+      background: linear-gradient(180deg, #FFFDFD 0%, #FFF5F8 100%);
+      border: 2px solid #F8D3DF;
+      box-shadow: 0 10px 25px -5px rgba(217, 107, 138, 0.14), 0 4px 10px -2px rgba(217, 107, 138, 0.08);
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .envelope-card:hover {
+      transform: translateY(-6px) scale(1.015);
+      border-color: #F29BB5;
+      box-shadow: 0 18px 32px -6px rgba(217, 107, 138, 0.22);
+    }
+
+    /* Envelope flap triangle visual */
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      background: linear-gradient(180deg, #FCE3EC 0%, #F9D2E0 100%);
+      clip-path: polygon(0 0, 50% 100%, 100% 0);
+      transition: transform 0.4s ease;
+      transform-origin: top;
+      z-index: 1;
+    }
+
+    .envelope-card:hover .envelope-flap {
+      transform: scaleY(0.88);
+    }
+
+    /* Wax Seal */
+    .wax-seal {
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 30% 30%, #FF9EBA, #E36B8E);
+      box-shadow: 0 3px 8px rgba(189, 71, 106, 0.35), inset 0 2px 3px rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFF8FA;
+      z-index: 2;
+      transition: transform 0.3s ease;
+    }
+
+    .envelope-card:hover .wax-seal {
+      transform: scale(1.12) rotate(-6deg);
+    }
+
+    /* Letter Modal Paper Lines */
+    .lined-paper {
+      background-color: var(--paper-cream);
+      background-image: linear-gradient(to bottom, transparent 31px, #F5E1E7 32px);
+      background-size: 100% 32px;
+      line-height: 32px;
+    }
+
+    /* Floating Heart Particle on Envelope Open */
+    @keyframes floatHeartUp {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(0.6) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-120px) scale(1.3) rotate(20deg);
+      }
+    }
+
+    .floating-heart {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      animation: floatHeartUp 1.4s ease-out forwards;
+    }
+
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FFEBF0;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #F2B5C7;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #E596AE;
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.bottom-16{bottom:4rem}.bottom-3{bottom:0.75rem}.bottom-4{bottom:1rem}.left-1\/2{left:50%}.left-2{left:0.5rem}.left-3{left:0.75rem}.left-4{left:1rem}.right-2{right:0.5rem}.right-3{right:0.75rem}.right-4{right:1rem}.top-1\/2{top:50%}.top-3{top:0.75rem}.top-4{top:1rem}.z-0{z-index:0}.z-10{z-index:10}.z-40{z-index:40}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-auto{margin-top:auto;margin-bottom:auto}.mb-1{margin-bottom:0.25rem}.mb-10{margin-bottom:2.5rem}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mt-14{margin-top:3.5rem}.mt-3{margin-top:0.75rem}.mt-6{margin-top:1.5rem}.-mt-5{margin-top:-1.25rem}.mb-3{margin-bottom:0.75rem}.mb-0\.5{margin-bottom:0.125rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-16{height:4rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-auto{height:auto}.max-h-\[88vh\]{max-height:88vh}.max-h-\[90vh\]{max-height:90vh}.min-h-\[195px\]{min-height:195px}.w-16{width:4rem}.w-24{width:6rem}.w-28{width:7rem}.w-4{width:1rem}.w-5{width:1.25rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-5xl{max-width:64rem}.max-w-lg{max-width:32rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.scale-95{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.select-none{-webkit-user-select:none;user-select:none}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-1{gap:0.25rem}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.whitespace-pre-line{white-space:pre-line}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-dashed{border-style:dashed}.border-pink-100{--tw-border-opacity:1;border-color:rgb(252 231 243 / var(--tw-border-opacity, 1))}.border-pink-200{--tw-border-opacity:1;border-color:rgb(251 207 232 / var(--tw-border-opacity, 1))}.border-pink-200\/70{border-color:rgb(251 207 232 / 0.7)}.border-pink-200\/80{border-color:rgb(251 207 232 / 0.8)}.border-pink-300{--tw-border-opacity:1;border-color:rgb(249 168 212 / var(--tw-border-opacity, 1))}.bg-\[\#5A3D45\]\/40{background-color:rgb(90 61 69 / 0.4)}.bg-\[\#5A3D45\]\/50{background-color:rgb(90 61 69 / 0.5)}.bg-\[\#5A4348\]{--tw-bg-opacity:1;background-color:rgb(90 67 72 / var(--tw-bg-opacity, 1))}.bg-\[\#E06D8E\]{--tw-bg-opacity:1;background-color:rgb(224 109 142 / var(--tw-bg-opacity, 1))}.bg-\[\#F28BA8\]{--tw-bg-opacity:1;background-color:rgb(242 139 168 / var(--tw-bg-opacity, 1))}.bg-\[\#FFF6F9\]{--tw-bg-opacity:1;background-color:rgb(255 246 249 / var(--tw-bg-opacity, 1))}.bg-\[\#FFFDF9\]{--tw-bg-opacity:1;background-color:rgb(255 253 249 / var(--tw-bg-opacity, 1))}.bg-pink-50{--tw-bg-opacity:1;background-color:rgb(253 242 248 / var(--tw-bg-opacity, 1))}.bg-pink-50\/50{background-color:rgb(253 242 248 / 0.5)}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/60{background-color:rgb(255 255 255 / 0.6)}.bg-white\/80{background-color:rgb(255 255 255 / 0.8)}.bg-white\/85{background-color:rgb(255 255 255 / 0.85)}.bg-\[\#FFF9FB\]{--tw-bg-opacity:1;background-color:rgb(255 249 251 / var(--tw-bg-opacity, 1))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.from-\[\#FFE3EC\]{--tw-gradient-from:#FFE3EC var(--tw-gradient-from-position);--tw-gradient-to:rgb(255 227 236 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-\[\#FFD6E3\]{--tw-gradient-to:rgb(255 214 227 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #FFD6E3 var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-\[\#FFE3EC\]{--tw-gradient-to:#FFE3EC var(--tw-gradient-to-position)}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.pb-24{padding-bottom:6rem}.pt-10{padding-top:2.5rem}.pt-2{padding-top:0.5rem}.pb-6{padding-bottom:1.5rem}.pt-12{padding-top:3rem}.text-left{text-align:left}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-\[11px\]{font-size:11px}.text-\[15px\]{font-size:15px}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.leading-none{line-height:1}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.leading-snug{line-height:1.375}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-\[\#5A4348\]{--tw-text-opacity:1;color:rgb(90 67 72 / var(--tw-text-opacity, 1))}.text-\[\#6E4752\]{--tw-text-opacity:1;color:rgb(110 71 82 / var(--tw-text-opacity, 1))}.text-\[\#85666D\]{--tw-text-opacity:1;color:rgb(133 102 109 / var(--tw-text-opacity, 1))}.text-\[\#9A7A82\]{--tw-text-opacity:1;color:rgb(154 122 130 / var(--tw-text-opacity, 1))}.text-pink-500{--tw-text-opacity:1;color:rgb(236 72 153 / var(--tw-text-opacity, 1))}.text-pink-600{--tw-text-opacity:1;color:rgb(219 39 119 / var(--tw-text-opacity, 1))}.text-pink-600\/80{color:rgb(219 39 119 / 0.8)}.text-pink-700\/90{color:rgb(190 24 93 / 0.9)}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-\[\#A6868E\]{--tw-text-opacity:1;color:rgb(166 134 142 / var(--tw-text-opacity, 1))}.text-pink-400{--tw-text-opacity:1;color:rgb(244 114 182 / var(--tw-text-opacity, 1))}.text-rose-500{--tw-text-opacity:1;color:rgb(244 63 94 / var(--tw-text-opacity, 1))}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.drop-shadow-sm{--tw-drop-shadow:drop-shadow(0 1px 1px rgb(0 0 0 / 0.05));filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.selection\:bg-pink-200 *::selection{--tw-bg-opacity:1;background-color:rgb(251 207 232 / var(--tw-bg-opacity, 1))}.selection\:text-pink-900 *::selection{--tw-text-opacity:1;color:rgb(131 24 67 / var(--tw-text-opacity, 1))}.selection\:bg-pink-200::selection{--tw-bg-opacity:1;background-color:rgb(251 207 232 / var(--tw-bg-opacity, 1))}.selection\:text-pink-900::selection{--tw-text-opacity:1;color:rgb(131 24 67 / var(--tw-text-opacity, 1))}.hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-\[\#CC5879\]:hover{--tw-bg-opacity:1;background-color:rgb(204 88 121 / var(--tw-bg-opacity, 1))}.hover\:bg-\[\#E07292\]:hover{--tw-bg-opacity:1;background-color:rgb(224 114 146 / var(--tw-bg-opacity, 1))}.hover\:bg-pink-100:hover{--tw-bg-opacity:1;background-color:rgb(252 231 243 / var(--tw-bg-opacity, 1))}.hover\:bg-pink-50:hover{--tw-bg-opacity:1;background-color:rgb(253 242 248 / var(--tw-bg-opacity, 1))}.hover\:bg-white:hover{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.hover\:text-pink-600:hover{--tw-text-opacity:1;color:rgb(219 39 119 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.focus\:border-pink-400:focus{--tw-border-opacity:1;border-color:rgb(244 114 182 / var(--tw-border-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.focus\:ring-4:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-pink-300\/60:focus{--tw-ring-color:rgb(249 168 212 / 0.6)}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:text-\[\#C85275\]{--tw-text-opacity:1;color:rgb(200 82 117 / var(--tw-text-opacity, 1))}.group:hover .group-hover\:text-pink-500{--tw-text-opacity:1;color:rgb(236 72 153 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:bottom-6{bottom:1.5rem}.sm\:left-10{left:2.5rem}.sm\:left-8{left:2rem}.sm\:right-10{right:2.5rem}.sm\:top-6{top:1.5rem}.sm\:top-8{top:2rem}.sm\:col-span-2{grid-column:span 2 / span 2}.sm\:col-span-3{grid-column:span 3 / span 3}.sm\:col-span-7{grid-column:span 7 / span 7}.sm\:mb-14{margin-bottom:3.5rem}.sm\:inline{display:inline}.sm\:w-28{width:7rem}.sm\:w-32{width:8rem}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.sm\:gap-6{gap:1.5rem}.sm\:p-6{padding:1.5rem}.sm\:p-8{padding:2rem}.sm\:px-8{padding-left:2rem;padding-right:2rem}.sm\:pt-14{padding-top:3.5rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-6xl{font-size:3.75rem;line-height:1}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}.sm\:text-\[26px\]{font-size:26px}}@media (min-width: 768px){.md\:block{display:block}}@media (min-width: 1024px){.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}}</style></head>
+<body class="selection:bg-pink-200 selection:text-pink-900">
+
+  <!-- ===================================================================== -->
+  <!-- CUTE SCATTERED BABY ANIMAL STICKERS (FLUFFY CATS, WHITE DUCKS, SQUIRRELS) -->
+  <!-- ===================================================================== -->
+  <div id="sticker-layer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+    
+    <!-- Top Left: Sleeping Fluffy White Kitten curled up -->
+    <div class="absolute top-3 left-2 sm:top-6 sm:left-8 w-24 sm:w-32 sticker-breathe">
+      <svg viewBox="0 0 140 110" class="w-full h-auto kawaii-sticker">
+        <!-- White sticker outline -->
+        <path d="M25,75 C15,50 35,28 52,32 L56,16 L68,28 C78,27 88,30 94,36 L108,24 L106,42 C122,52 124,78 105,88 C82,98 35,95 25,75 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round"></path>
+        <!-- Fluffy kitten body -->
+        <ellipse cx="72" cy="68" rx="42" ry="26" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2"></ellipse>
+        <!-- Fluffy tail curled around -->
+        <path d="M106,72 C122,72 124,88 102,91 C85,93 74,88 74,84" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2" stroke-linecap="round"></path>
+        <!-- Kitten Head -->
+        <circle cx="52" cy="52" r="23" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2"></circle>
+        <!-- Left & Right Ears -->
+        <path d="M33,40 L31,20 L48,32 Z" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2" stroke-linejoin="round"></path>
+        <path d="M36,37 L35,25 L45,33 Z" fill="#FFC4D6"></path>
+        <path d="M68,36 L76,18 L57,30 Z" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2" stroke-linejoin="round"></path>
+        <path d="M66,34 L72,23 L60,31 Z" fill="#FFC4D6"></path>
+        <!-- Closed sleepy eyes -->
+        <path d="M40,51 Q44,55 48,51" fill="none" stroke="#85666D" stroke-width="2" stroke-linecap="round"></path>
+        <path d="M56,51 Q60,55 64,51" fill="none" stroke="#85666D" stroke-width="2" stroke-linecap="round"></path>
+        <!-- Rosy cheeks & tiny nose -->
+        <ellipse cx="38" cy="56" rx="4.5" ry="2.5" fill="#FFB3C6" opacity="0.75"></ellipse>
+        <ellipse cx="66" cy="56" rx="4.5" ry="2.5" fill="#FFB3C6" opacity="0.75"></ellipse>
+        <polygon points="50,55 54,55 52,58" fill="#FF9EB5"></polygon>
+        <!-- Little paws tucked under chin -->
+        <ellipse cx="46" cy="72" rx="7" ry="4.5" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="1.8"></ellipse>
+        <ellipse cx="60" cy="72" rx="7" ry="4.5" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="1.8"></ellipse>
+        <!-- Floating Zzz -->
+        <text x="82" y="28" fill="#D97B96" font-family="Caveat, cursive" font-size="16" font-weight="bold" class="zzz-anim">z</text>
+        <text x="92" y="19" fill="#D97B96" font-family="Caveat, cursive" font-size="13" font-weight="bold" class="zzz-anim" style="animation-delay: 1s;">z</text>
+      </svg>
+    </div>
+
+    <!-- Top Right: Resting Baby White Duckling -->
+    <div class="absolute top-4 right-2 sm:top-8 sm:right-10 w-24 sm:w-32 sticker-sway">
+      <svg viewBox="0 0 130 110" class="w-full h-auto kawaii-sticker">
+        <!-- Sticker white outline -->
+        <path d="M30,68 C22,52 38,42 52,45 C52,25 78,20 88,36 C98,40 105,46 96,52 C104,64 96,86 70,88 C45,90 34,80 30,68 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round"></path>
+        <!-- Duckling chubby body lying down -->
+        <ellipse cx="64" cy="68" rx="34" ry="21" fill="#FFFFFF" stroke="#E2D5D8" stroke-width="2"></ellipse>
+        <!-- Cute little tail feather -->
+        <path d="M31,64 L22,58 L32,72" fill="#FFFFFF" stroke="#E2D5D8" stroke-width="2" stroke-linejoin="round"></path>
+        <!-- Duckling round head -->
+        <circle cx="76" cy="42" r="19" fill="#FFFFFF" stroke="#E2D5D8" stroke-width="2"></circle>
+        <!-- Little tuft of baby fluff on top -->
+        <path d="M72,24 Q74,16 78,23 Q82,17 82,24" fill="none" stroke="#E2D5D8" stroke-width="2" stroke-linecap="round"></path>
+        <!-- Cute orange baby beak -->
+        <ellipse cx="96" cy="44" rx="8" ry="4.5" fill="#FFBE7B" stroke="#E59B56" stroke-width="1.5"></ellipse>
+        <!-- Happy closed eye & rosy cheek -->
+        <path d="M78,39 Q82,35 86,39" fill="none" stroke="#6E565B" stroke-width="2" stroke-linecap="round"></path>
+        <ellipse cx="83" cy="46" rx="4.5" ry="2.8" fill="#FFB3C6" opacity="0.8"></ellipse>
+        <!-- Tiny folded wing -->
+        <path d="M52,64 Q66,58 74,68 Q62,76 50,70 Z" fill="#FFF7F9" stroke="#E2D5D8" stroke-width="1.8"></path>
+      </svg>
+    </div>
+
+    <!-- Middle Left (Desktop): Cozy Baby Squirrel hugging an acorn -->
+    <div class="hidden md:block absolute top-1/2 left-4 -translate-y-1/2 w-28 sticker-breathe" style="animation-delay: 1.5s;">
+      <svg viewBox="0 0 130 130" class="w-full h-auto kawaii-sticker">
+        <!-- Big fluffy curled squirrel tail -->
+        <path d="M48,96 C16,96 12,52 38,38 C56,28 70,44 62,62 C55,76 46,72 50,62" fill="#E8B496" stroke="#FFFFFF" stroke-width="8" stroke-linejoin="round"></path>
+        <path d="M48,96 C16,96 12,52 38,38 C56,28 70,44 62,62 C55,76 46,72 50,62" fill="#E8B496" stroke="#C68E6E" stroke-width="2" stroke-linecap="round"></path>
+        <!-- Squirrel body -->
+        <ellipse cx="68" cy="82" rx="22" ry="24" fill="#F2C6AC" stroke="#C68E6E" stroke-width="2"></ellipse>
+        <!-- Cream belly -->
+        <ellipse cx="74" cy="84" rx="13" ry="16" fill="#FFF6EE"></ellipse>
+        <!-- Squirrel Head -->
+        <circle cx="72" cy="50" r="20" fill="#F2C6AC" stroke="#C68E6E" stroke-width="2"></circle>
+        <!-- Rounded Squirrel Ears -->
+        <circle cx="58" cy="34" r="6.5" fill="#F2C6AC" stroke="#C68E6E" stroke-width="2"></circle>
+        <circle cx="82" cy="33" r="6.5" fill="#F2C6AC" stroke="#C68E6E" stroke-width="2"></circle>
+        <!-- Cute Eyes & Cheeks -->
+        <circle cx="67" cy="48" r="2.5" fill="#5A4348"></circle>
+        <circle cx="81" cy="48" r="2.5" fill="#5A4348"></circle>
+        <circle cx="66" cy="47" r="0.9" fill="#FFFFFF"></circle>
+        <circle cx="80" cy="47" r="0.9" fill="#FFFFFF"></circle>
+        <ellipse cx="63" cy="53" rx="4" ry="2.2" fill="#FF9EB5" opacity="0.7"></ellipse>
+        <ellipse cx="85" cy="53" rx="4" ry="2.2" fill="#FF9EB5" opacity="0.7"></ellipse>
+        <!-- Tiny Acorn held in paws -->
+        <ellipse cx="84" cy="80" rx="8" ry="10" fill="#D99B66" stroke="#9E683C" stroke-width="1.5"></ellipse>
+        <path d="M75,75 Q84,70 93,75 L91,71 Q84,67 77,71 Z" fill="#9E683C"></path>
+        <!-- Little paws holding acorn -->
+        <circle cx="77" cy="80" r="4.5" fill="#F2C6AC" stroke="#C68E6E" stroke-width="1.5"></circle>
+        <circle cx="89" cy="81" r="4.5" fill="#F2C6AC" stroke="#C68E6E" stroke-width="1.5"></circle>
+      </svg>
+    </div>
+
+    <!-- Middle Right (Desktop): Fluffy Calico/Cream Baby Kitten lying on tummy -->
+    <div class="hidden md:block absolute top-1/2 right-4 -translate-y-1/2 w-28 sticker-sway" style="animation-delay: 2s;">
+      <svg viewBox="0 0 130 110" class="w-full h-auto kawaii-sticker">
+        <ellipse cx="65" cy="72" rx="38" ry="22" fill="#FFF9F2" stroke="#FFFFFF" stroke-width="8"></ellipse>
+        <ellipse cx="65" cy="72" rx="38" ry="22" fill="#FFF9F2" stroke="#DEC5B0" stroke-width="2"></ellipse>
+        <!-- Cute caramel spot on back -->
+        <ellipse cx="78" cy="64" rx="14" ry="9" fill="#F3D1B0" opacity="0.8"></ellipse>
+        <!-- Head -->
+        <circle cx="46" cy="54" r="21" fill="#FFF9F2" stroke="#DEC5B0" stroke-width="2"></circle>
+        <!-- Ears -->
+        <path d="M29,42 L28,23 L43,34 Z" fill="#F3D1B0" stroke="#DEC5B0" stroke-width="2" stroke-linejoin="round"></path>
+        <path d="M62,40 L69,22 L51,33 Z" fill="#FFF9F2" stroke="#DEC5B0" stroke-width="2" stroke-linejoin="round"></path>
+        <!-- Big sparkly kawaii eyes -->
+        <circle cx="38" cy="53" r="3" fill="#5A4348"></circle>
+        <circle cx="54" cy="53" r="3" fill="#5A4348"></circle>
+        <circle cx="37" cy="52" r="1.1" fill="#FFFFFF"></circle>
+        <circle cx="53" cy="52" r="1.1" fill="#FFFFFF"></circle>
+        <!-- Little 'w' cat mouth & cheeks -->
+        <path d="M43,58 Q45,61 46,58 Q47,61 49,58" fill="none" stroke="#85666D" stroke-width="1.6" stroke-linecap="round"></path>
+        <ellipse cx="33" cy="58" rx="4" ry="2" fill="#FFB3C6" opacity="0.75"></ellipse>
+        <ellipse cx="59" cy="58" rx="4" ry="2" fill="#FFB3C6" opacity="0.75"></ellipse>
+        <!-- Tail -->
+        <path d="M101,72 Q116,60 112,48" fill="none" stroke="#DEC5B0" stroke-width="6" stroke-linecap="round"></path>
+        <path d="M101,72 Q116,60 112,48" fill="none" stroke="#FFF9F2" stroke-width="3" stroke-linecap="round"></path>
+      </svg>
+    </div>
+
+    <!-- Bottom Left: Baby Squirrel curled up napping -->
+    <div class="absolute bottom-3 left-3 sm:bottom-6 sm:left-10 w-24 sm:w-28 sticker-sway" style="animation-delay: 0.8s;">
+      <svg viewBox="0 0 130 110" class="w-full h-auto kawaii-sticker">
+        <ellipse cx="65" cy="68" rx="40" ry="25" fill="#F5D0BA" stroke="#FFFFFF" stroke-width="9"></ellipse>
+        <!-- Fluffy Tail curled over body like a blanket -->
+        <path d="M40,74 C35,44 75,34 95,55 C106,67 96,88 74,88 C55,88 45,80 40,74 Z" fill="#E6B091" stroke="#C48B6C" stroke-width="2"></path>
+        <!-- Squirrel Head resting on paws -->
+        <circle cx="44" cy="62" r="19" fill="#F5D0BA" stroke="#C48B6C" stroke-width="2"></circle>
+        <circle cx="34" cy="46" r="6" fill="#F5D0BA" stroke="#C48B6C" stroke-width="2"></circle>
+        <circle cx="52" cy="45" r="6" fill="#F5D0BA" stroke="#C48B6C" stroke-width="2"></circle>
+        <!-- Closed sleepy eyes -->
+        <path d="M35,62 Q39,65 43,62" fill="none" stroke="#6E4E42" stroke-width="2" stroke-linecap="round"></path>
+        <path d="M48,62 Q52,65 56,62" fill="none" stroke="#6E4E42" stroke-width="2" stroke-linecap="round"></path>
+        <ellipse cx="34" cy="66" rx="3.5" ry="2" fill="#FF9EB5" opacity="0.75"></ellipse>
+        <ellipse cx="56" cy="66" rx="3.5" ry="2" fill="#FF9EB5" opacity="0.75"></ellipse>
+      </svg>
+    </div>
+
+    <!-- Bottom Right: Little White Duckling with a tiny pink bow -->
+    <div class="absolute bottom-3 right-3 sm:bottom-6 sm:right-10 w-24 sm:w-28 sticker-breathe" style="animation-delay: 1.2s;">
+      <svg viewBox="0 0 130 110" class="w-full h-auto kawaii-sticker">
+        <ellipse cx="65" cy="70" rx="33" ry="21" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="9"></ellipse>
+        <ellipse cx="65" cy="70" rx="33" ry="21" fill="#FFFFFF" stroke="#E2D5D8" stroke-width="2"></ellipse>
+        <circle cx="52" cy="44" r="19" fill="#FFFFFF" stroke="#E2D5D8" stroke-width="2"></circle>
+        <!-- Cute Pink Bow on head -->
+        <path d="M52,25 L43,19 L45,29 Z M52,25 L61,19 L59,29 Z" fill="#FF9EBA" stroke="#E06D8E" stroke-width="1.2" stroke-linejoin="round"></path>
+        <circle cx="52" cy="25" r="2.5" fill="#FF759C"></circle>
+        <!-- Beak facing left -->
+        <ellipse cx="32" cy="46" rx="7.5" ry="4" fill="#FFBE7B" stroke="#E59B56" stroke-width="1.5"></ellipse>
+        <!-- Eye & Blush -->
+        <circle cx="45" cy="41" r="2.6" fill="#5A4348"></circle>
+        <circle cx="44" cy="40" r="0.9" fill="#FFFFFF"></circle>
+        <ellipse cx="43" cy="48" rx="4.2" ry="2.4" fill="#FFB3C6" opacity="0.8"></ellipse>
+        <!-- Tiny Wing -->
+        <path d="M58,66 Q72,60 80,70 Q68,77 56,72 Z" fill="#FFF7F9" stroke="#E2D5D8" stroke-width="1.8"></path>
+      </svg>
+    </div>
+
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MAIN CONTENT CONTAINER                                                -->
+  <!-- ===================================================================== -->
+  <main class="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 pt-10 pb-24 sm:pt-14">
+    
+    <!-- Header Section -->
+    <header class="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-pink-200 shadow-sm text-xs sm:text-sm font-medium text-pink-600 mb-4">
+        <span>💌</span>
+        <span>A little pocket of love, just for you</span>
+        <span>🐾</span>
+      </div>
+      
+      <h1 id="page-title" class="font-handwriting text-4xl sm:text-6xl font-bold text-[#6E4752] tracking-wide drop-shadow-sm leading-tight">
+        Janjonty, ro7 qalby... Open this whenever...
+      </h1>
+      
+      <p id="page-subtitle" class="mt-3 text-sm sm:text-base text-[#85666D] max-w-lg mx-auto leading-relaxed">"However far away, I will always love you..." -Adele 💟</p>
+    </header>
+
+    <!-- Envelopes Grid -->
+    <section aria-label="Open When Envelopes">
+      <div id="envelopes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        <button onclick="openLetterModal(1, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">💗</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...miss me a little extra
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(2, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🐾</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...had a bad day or not feeling well
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(3, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🌠</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...we have a fight
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(4, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🌸</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...are overthinking everything
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(5, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">✨</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...want me to motivate you
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(6, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🏡</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...are dreaming about our future
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(7, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🧸</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...are horny and I'm unavailable rn
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(8, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🌷</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...think about doing smtn stupid
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(9, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🌹</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...are tired from school
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      
+        <button onclick="openLetterModal(10, event)" class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60">
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">🌝</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ...are going to sleep
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Gentle Footer Note -->
+    <footer class="mt-14 text-center text-xs sm:text-sm text-[#9A7A82]">
+      <p class="inline-flex items-center gap-1.5 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full border border-pink-100">
+        <span>Made with all my love for Janjonty</span>
+        <span class="text-pink-500">♥</span>
+      </p>
+    </footer>
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- LETTER READING MODAL                                                  -->
+  <!-- ===================================================================== -->
+  <div id="letter-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 sm:p-6 bg-[#5A3D45]/40 backdrop-blur-sm transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="modal-prompt-title">
+    <div id="letter-card" class="relative w-full max-w-xl max-h-[88vh] flex flex-col rounded-3xl bg-[#FFFDF9] border-2 border-pink-200 shadow-2xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0">
+      
+      <!-- Top Decorative Ribbon Header -->
+      <div class="bg-gradient-to-r from-[#FFE3EC] via-[#FFD6E3] to-[#FFE3EC] px-6 py-4 border-b border-pink-200/80 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span id="modal-seal-icon" class="text-xl">💌</span>
+          <div>
+            <span class="text-[11px] uppercase tracking-wider font-semibold text-pink-600/80 block">Open whenever you...</span>
+            <h2 id="modal-prompt-title" class="font-handwriting text-2xl sm:text-3xl font-bold text-[#5A4348] leading-none">
+              ...miss me a little extra
+            </h2>
+          </div>
+        </div>
+        
+        <button onclick="closeLetterModal()" class="p-2 rounded-full bg-white/80 hover:bg-white text-[#85666D] hover:text-pink-600 transition shadow-sm" aria-label="Close letter">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lined Paper Letter Body -->
+      <div class="p-6 sm:p-8 overflow-y-auto lined-paper flex-1">
+        <div class="font-handwriting text-2xl text-pink-700/90 mb-2">Dearest Jana,</div>
+        
+        <div id="modal-letter-body" class="font-serif-letter text-[15px] sm:text-base text-[#5A4348] whitespace-pre-line">
+          <!-- Letter text injected here -->
+        </div>
+
+        <div class="mt-6 pt-2 flex items-end justify-between">
+          <div>
+            <p class="font-handwriting text-2xl text-[#6E4752]">Forever yours,</p>
+            <p id="modal-sign-off" class="font-handwriting text-xl text-pink-600">Me ♥</p>
+          </div>
+          
+          <!-- Cute Mini Baby Animal Companion Sticker inside the letter -->
+          <div id="modal-animal-badge" class="w-16 h-16 flex items-center justify-center bg-pink-50 rounded-2xl border border-pink-200/70 shadow-inner">
+            <!-- Mini SVG injected dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Action Bar -->
+      <div class="px-6 py-3.5 bg-[#FFF6F9] border-t border-pink-100 flex justify-between items-center">
+        <span class="text-xs text-[#9A7A82] italic">Take a deep breath, I'm right here with you.</span>
+        <button onclick="closeLetterModal()" class="px-5 py-2 rounded-full bg-[#F28BA8] hover:bg-[#E07292] text-white font-semibold text-sm shadow-sm transition transform active:scale-95">
+          Close letter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- DISCREET CUSTOMIZE / EDIT BUTTON & DRAWER                             -->
+  <!-- ===================================================================== -->
+  <button onclick="openEditorModal()" title="Customize letters &amp; export file for Jana" class="fixed bottom-4 right-4 z-40 p-3 rounded-full bg-white/85 hover:bg-white text-[#85666D] hover:text-pink-600 border border-pink-200 shadow-md backdrop-blur-sm transition transform hover:scale-105 flex items-center gap-1.5 text-xs font-medium">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+    </svg>
+    <span class="hidden sm:inline">Customize</span>
+  </button>
+
+  <!-- Editor Modal so the user can edit messages & export a standalone HTML file -->
+  <div id="editor-modal" class="fixed inset-0 z-50 items-center justify-center p-4 bg-[#5A3D45]/50 backdrop-blur-sm flex">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col border-2 border-pink-200 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 bg-pink-50 border-b border-pink-200 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-lg text-[#5A4348]">Personalize Jana's Letters</h3>
+          <p class="text-xs text-[#85666D]">Edit any prompt or letter below, then download the ready-to-send webpage!</p>
+        </div>
+        <button onclick="closeEditorModal()" class="p-2 rounded-full hover:bg-pink-100 text-[#85666D]">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-5 flex-1">
+        <!-- Sign-off & Subtitle customization -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-pink-50/50 p-4 rounded-2xl border border-pink-100">
+          <div>
+            <label class="block text-xs font-semibold text-[#6E4752] mb-1">Your Nickname / Sign-off</label>
+            <input id="edit-signoff" type="text" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm focus:outline-none focus:border-pink-400" placeholder="e.g., Your sleepy boy ♥">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#6E4752] mb-1">Subtitle Message</label>
+            <input id="edit-subtitle" type="text" class="w-full px-3 py-2 rounded-xl border border-pink-200 text-sm focus:outline-none focus:border-pink-400">
+          </div>
+        </div>
+
+        <!-- Envelopes List Editor -->
+        <div id="editor-envelopes-list" class="space-y-4">
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="1">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #1</span>
+            
+              <button onclick="removeEnvelope(1)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="💗">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...miss me a little extra">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat" selected="">Baby Cat</option>
+                <option value="duck">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">I know I might be halfway across the globe rn, but you're always in my heart. I really wish distance wasn't a thing so I can come here and kiss you everywhereee!
+
+You don't know how much I lovve youu, how i wanna make you the happiest human ever, how i want you to be the mother of my kids and my happily ever after.
+
+I promise baby, once all these issues end and the distance fades away ha3awadek 3n kol eli byhsal. Walahi mte3rafeesh ana bhbk qad eh ya 3oyony enty y ahla haga fl donya.
+
+Bgd bhbk bhbk bhbk awy kamann 💗</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #2</span>
+            
+              <button onclick="removeEnvelope(2)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🐾">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...had a bad day or not feeling well">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat">Baby Cat</option>
+                <option value="duck" selected="">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">I know nothing I say rn can change your parents or fix the problem, bs im so sorry for you ya hayaty. heya fatra w ht3ady y rouhy dw.
+
+3rfa lw ana kont qoryb menk? I would've sneaked into the house, punched both your dad and stepmom, helped you pack your bags and run away as soon as we can as far away as we can. or the least i can ever do is stay by your side and hug you sooo tightt.
+
+I promise baby, I'll get you out of there as soon as I can, you js gotta hold on.
+And a quick reminder that you can always come back to me and talk to me abt anything that bothers you y qalby, deal? 💕
+
+js... Ignore whatvr they said, you're doing so great y 3omry, and I'm so proud of you...</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="3">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #3</span>
+            
+              <button onclick="removeEnvelope(3)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🌠">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...we have a fight">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat" selected="">Baby Cat</option>
+                <option value="duck">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">Baby... I know I messed up, I really do.
+
+Nothing I can say will make you forgive me, bs I js want you to know I do feel sorry and ofc I'd never wish to harm you in any way...
+
+You're my wife ffs, you're the love of my life, enty ahla haga fl donya de kolha, enty rouhy w qalby w 3aqly w 3oyony w kol haga leya.
+
+Myhonsh aalaya za3alk y rouhy walahi, tb qolyly a3ml eh and we can fix everything? 🥰
+
+ah... if we fight alot that means we're growing, and thats kind of a good thing. and no, no matter how much we fight and how big our fights are : we're not taking a break and we sure aren't breaaking up, okay y qalby? </textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="4">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #4</span>
+            
+              <button onclick="removeEnvelope(4)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🌸">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...are overthinking everything">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat">Baby Cat</option>
+                <option value="duck" selected="">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">Habybty, I'll never look at another woman, I'll never want someone else, and I'll never ever cheat on you!
+
+Like, b zemetek fe 7d fl donya yeqdar ybos aala 7d tany w howa maah el qamar da?!
+
+Ana bhbk enty w bas, w hatgawezek enty w bas, w msh aayz ay 7d fl donya de 8erek enty.
+
+And if you're overthinking abt smtn else, don't.
+
+Kol haga hat3ady y rouhy, and I'm always here for you. you can come vent to me, let out your anger on me, fight me, cry beside me, kill me, and I'll always stay by your side in your worst before your best 😻
+
+Walahi bhbk enty bas, w hafdal ganbk tool el 3omr y hayaty.</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="5">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #5</span>
+            
+              <button onclick="removeEnvelope(5)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="✨">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...want me to motivate you">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat">Baby Cat</option>
+                <option value="duck">Baby Duck</option>
+                <option value="squirrel" selected="">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">Yala HOP HOP HOP!
+
+Walahi y rouhy you don't know how proud I am, ely 3amalteh da gamed gedan keep going.
+
+Bs don't stop now ba2a. You have to keep going even if it gets difficult or boring or stupid or annoying, you've gone too far to stop now.
+
+I'm here for you whenever you need my help, and I'm gonna always support you and will stay by your side at all times.
+
+And I REALLY am so proud of you y hayaty... 💌</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="6">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #6</span>
+            
+              <button onclick="removeEnvelope(6)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🏡">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...are dreaming about our future">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat" selected="">Baby Cat</option>
+                <option value="duck">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">Look baby, serious talk now...
+
+In 2027 : I'll be 18 and you'll be 15. I'll start college and you'll be in grade 9. (don't be mad if i'm wrong, I have the memory of a jellyfish")
+
+Your dad said no marriage till ur 20? You'll be 20 in 2032, You'll be in the 2nd year of college. I'd have gratuated this year or a year ago 7asab ana had5ol which college.
+
+Keda keda I'll work either from when I start college or on my 2nd year of college so I'll try and save as much as I can.
+
+I'll work in the cafe again so I'll get 7K a month bs I'll spend abt 2k in food and transportation so lets say abt 5k a month + dad's gonna give me an extra allowance so lets say 2k.
+
+minimum I save 4k each month : 4x12x4 = 16x12 = 192k (nqol 150k for emergencies)
+if i work for another year during 5otoba : 48k so total's gonna be 200k
+
+we can have a humble wedding, bs it'll be gorgeous. we'll try not to overspend on our honeymoon and we'll live in a small rented studio (1 room, small bathroom, small kitchen, small or no reception). It's js gonna be for a while till we can save up showya and buy our dream house, hell even in dubai or in germany or smtn.
+
+we'll be broke fl awl, bs that won't stop us from having fun and buying whatever we want. I'll still take you on dates, fancy and casual or even eating burgers on the streets. We'll buy a small car that we're gonna take for alot of car rides and roadtrips. I'll try make you not feel the weight of poverty and i'll end it soon dw.
+
+when we grow up showya (maybe in 2039 where you'll be 27 and i'll be 30) we can start trying for kids. we'll have a big house by then and good paying jobs so we can provide for the kids... idk abt you but the top 2 names i've decided on are : Laila and Salma for girls, Ali and Yassin for boys. I've dreamt of having 2 boys and a girl w the girl being the middle child or the youngest. We'll teach them everything, and we'll always be there for them, and we'll make them the happiest ever. I'll be the good daddy that takes them out and buys them candy behind their mommy's backs. I'll help them w school and friends and teach them valuable lesons, and they playing sports at a young age, idc.
+
+we're gonna be such good parents, and you'll be the most perfect wife and mommy ever, and I promise I'll do everything I can for all of you. ❣
+
+In my opinion, a mother should have her kids a priority over work... Before you get mad hear me out!
+
+You'll be working till you're 7 months pregnant or smtn, then you'll take a maternity leave for until the kid goes to school, then you'll be back to work. and if we have multiple kids you'll stay at home till THE YOUNGEST goes to school. after that you can work tany bs still kids are a priority for both of us. momkn masalan you drop em off to school and i'll pick them up or smtn.
+
+to summarise everything : bhbk bhbk bhbk ya ahla janjona fl donya kolaha 😘</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="7">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #7</span>
+            
+              <button onclick="removeEnvelope(7)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🧸">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...are horny and I'm unavailable rn">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat">Baby Cat</option>
+                <option value="duck" selected="">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">Oh baby... You getting wet? Is it beating rn?
+
+It's okay. Lock your doors, drop your pants down, and start rubbing it gently. Yes, feel its warmth, feel its need for more, feel its excitement.
+
+Grab your pillow, and imagine it was me. Push it inside, rub it all around, start gently and finish hard.
+
+Keep going mommy, imagine you're with me. Imagine I'm inside you, Imagine how big it'll be. Imagine me destroying your legs. Imagine me sucking on your tits while I fuck you.... Mhm yes, feel me going in &amp; out.
+
+You getting wet, hayaty? I wanna taste you sm, I wanna lick your pussy sm its taste will stay in my tongue for weeeks... 👅
+
+Thats it, cum for me mommy, let it all out, cum all over my dick, yes!
+
+Hope you enjoyed it mommy, now clean up and rest. You deserve it.</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="8">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #8</span>
+            
+              <button onclick="removeEnvelope(8)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🌷">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...think about doing smtn stupid">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat" selected="">Baby Cat</option>
+                <option value="duck">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">Wow...
+
+Istg y jana if you THINK abt it I'm gonna kill you myself!
+
+Jana, baby, whatever you think abt doing it's really not worth it...
+
+First of all : It's haram! Do you really want allah to ignore everything you're doing and praying and everything and send you straight to hell? I don't think so.
+
+Second of all : Look how you're gonna hurt everyone around you... Your parents, Your siblings, your friends, your cousins, your teachers, me... You don't know how that'll affect everything, how that'll affect me...
+
+Third of all : If you do it, I'll do it! Azon fair and square 🤷‍♂️
+
+Baby js get that nonsense out of your head and come talk to me, I'll listen, I'll help if I can, I'll be beside you, always....
+
+I really love you sm... 💕</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="9">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #9</span>
+            
+              <button onclick="removeEnvelope(9)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🌹">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...are tired from school">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat">Baby Cat</option>
+                <option value="duck">Baby Duck</option>
+                <option value="squirrel" selected="">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">I know school can be shit, and Ik it's exhausting, and Ik it drains all your energy, bs you're almost done with it.
+
+I know you're smart, and you're gonna get straight "A+"s on all your tests. I believe in you.
+
+ISA this all ends soon, and you go to college and... you're gonna study even more 3mtn 😐...
+
+bs after you finish school you're gonna work and you'll need all that "nonsense", believe me.
+
+js keep going y rouhy and I'll be here if you need help w anything (especially maths &amp; physics)
+
+And I'm so proud of you y ahla janjona! 😍</textarea>
+          </div>
+        </div>
+      
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="10">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #10</span>
+            
+              <button onclick="removeEnvelope(10)" class="text-xs text-rose-500 hover:underline">Remove</button>
+            
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="🌝">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="...are going to sleep">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat">Baby Cat</option>
+                <option value="duck" selected="">Baby Duck</option>
+                <option value="squirrel">Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">First of all : wash your face and teeth.
+
+Second of all : I js wanna say... You don't know how much I love you, and you dont know how much I'd pay rn to sleep beside you.
+
+I wanna hug you so tight while you sleep, and kiss your forehead tol el waqt, bs istg if you take my blanket i'll push you off y haramyaya 🙂
+
+I wish you a very goodnight ya hayaty, and I hope you sleep so well. bhbk bhbk bhbkkkk ❤
+
+When you wake up htlaqeny mstaneky y 3omry.</textarea>
+          </div>
+        </div>
+      </div>
+
+        <button onclick="addNewEnvelope()" class="w-full py-2.5 rounded-2xl border-2 border-dashed border-pink-300 text-pink-600 font-semibold text-sm hover:bg-pink-50 transition">
+          + Add Another Envelope
+        </button>
+      </div>
+
+      <div class="px-6 py-4 bg-pink-50 border-t border-pink-200 flex flex-wrap items-center justify-between gap-3">
+        <button onclick="saveAndApplyChanges()" class="px-5 py-2.5 rounded-full bg-white border border-pink-300 text-[#6E4752] hover:bg-pink-100 font-semibold text-sm transition">
+          Save Preview
+        </button>
+        <button onclick="downloadStandaloneHTML()" class="px-5 py-2.5 rounded-full bg-[#E06D8E] hover:bg-[#CC5879] text-white font-semibold text-sm shadow-md transition flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          <span>Download File to Send to Jana</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification (Replaces alert) -->
+  <div id="toast-msg" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-full bg-[#5A4348] text-white text-xs sm:text-sm font-medium shadow-lg pointer-events-none transition-opacity duration-300 opacity-0">Preview updated with your changes! 💌</div>
+
+  <!-- ===================================================================== -->
+  <!-- INTERACTIVE JAVASCRIPT LOGIC                                          -->
+  <!-- ===================================================================== -->
+  <script>
+    // Mini SVG icons for inside the opened letters (baby cat, baby duck, baby squirrel)
+    const ANIMAL_BADGES = {
+      cat: `<svg viewBox="0 0 60 60" class="w-12 h-12">
+              <circle cx="30" cy="34" r="16" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2"/>
+              <path d="M17,24 L16,11 L26,19 Z" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M43,24 L44,11 L34,19 Z" fill="#FFFDFD" stroke="#E5C8D0" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="24" cy="33" r="2" fill="#5A4348"/>
+              <circle cx="36" cy="33" r="2" fill="#5A4348"/>
+              <ellipse cx="21" cy="37" rx="3" ry="1.8" fill="#FFB3C6"/>
+              <ellipse cx="39" cy="37" rx="3" ry="1.8" fill="#FFB3C6"/>
+              <path d="M28,37 Q30,39 32,37" fill="none" stroke="#85666D" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>`,
+      duck: `<svg viewBox="0 0 60 60" class="w-12 h-12">
+              <circle cx="30" cy="33" r="16" fill="#FFFFFF" stroke="#E2D5D8" stroke-width="2"/>
+              <path d="M27,17 Q30,11 33,17" fill="none" stroke="#E2D5D8" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="30" cy="38" rx="6" ry="3.5" fill="#FFBE7B"/>
+              <circle cx="24" cy="30" r="2" fill="#5A4348"/>
+              <circle cx="36" cy="30" r="2" fill="#5A4348"/>
+              <ellipse cx="21" cy="34" rx="3" ry="1.8" fill="#FFB3C6"/>
+              <ellipse cx="39" cy="34" rx="3" ry="1.8" fill="#FFB3C6"/>
+            </svg>`,
+      squirrel: `<svg viewBox="0 0 60 60" class="w-12 h-12">
+              <circle cx="19" cy="20" r="5" fill="#F2C6AC" stroke="#C68E6E" stroke-width="1.8"/>
+              <circle cx="41" cy="20" r="5" fill="#F2C6AC" stroke="#C68E6E" stroke-width="1.8"/>
+              <circle cx="30" cy="33" r="16" fill="#F2C6AC" stroke="#C68E6E" stroke-width="2"/>
+              <circle cx="24" cy="32" r="2" fill="#5A4348"/>
+              <circle cx="36" cy="32" r="2" fill="#5A4348"/>
+              <ellipse cx="21" cy="36" rx="3" ry="1.8" fill="#FF9EB5"/>
+              <ellipse cx="39" cy="36" rx="3" ry="1.8" fill="#FF9EB5"/>
+              <polygon points="28,35 32,35 30,37.5" fill="#8C5843"/>
+            </svg>`
+    };
+
+    // Default initial state (embedded directly so downloaded standalone file keeps all edits)
+    let appData = {
+  "subtitle": "\"However far away, I will always love you...\" -Adele 💟",
+  "signOff": "Roomy, the guy who's deeply inlove with you.. ♥",
+  "envelopes": [
+    {
+      "id": 1,
+      "seal": "💗",
+      "prompt": "...miss me a little extra",
+      "animal": "cat",
+      "letter": "I know I might be halfway across the globe rn, but you're always in my heart. I really wish distance wasn't a thing so I can come here and kiss you everywhereee!\n\nYou don't know how much I lovve youu, how i wanna make you the happiest human ever, how i want you to be the mother of my kids and my happily ever after.\n\nI promise baby, once all these issues end and the distance fades away ha3awadek 3n kol eli byhsal. Walahi mte3rafeesh ana bhbk qad eh ya 3oyony enty y ahla haga fl donya.\n\nBgd bhbk bhbk bhbk awy kamann 💗"
+    },
+    {
+      "id": 2,
+      "seal": "🐾",
+      "prompt": "...had a bad day or not feeling well",
+      "animal": "duck",
+      "letter": "I know nothing I say rn can change your parents or fix the problem, bs im so sorry for you ya hayaty. heya fatra w ht3ady y rouhy dw.\n\n3rfa lw ana kont qoryb menk? I would've sneaked into the house, punched both your dad and stepmom, helped you pack your bags and run away as soon as we can as far away as we can. or the least i can ever do is stay by your side and hug you sooo tightt.\n\nI promise baby, I'll get you out of there as soon as I can, you js gotta hold on.\nAnd a quick reminder that you can always come back to me and talk to me abt anything that bothers you y qalby, deal? 💕\n\njs... Ignore whatvr they said, you're doing so great y 3omry, and I'm so proud of you..."
+    },
+    {
+      "id": 3,
+      "seal": "🌠",
+      "prompt": "...we have a fight",
+      "animal": "cat",
+      "letter": "Baby... I know I messed up, I really do.\n\nNothing I can say will make you forgive me, bs I js want you to know I do feel sorry and ofc I'd never wish to harm you in any way...\n\nYou're my wife ffs, you're the love of my life, enty ahla haga fl donya de kolha, enty rouhy w qalby w 3aqly w 3oyony w kol haga leya.\n\nMyhonsh aalaya za3alk y rouhy walahi, tb qolyly a3ml eh and we can fix everything? 🥰\n\nah... if we fight alot that means we're growing, and thats kind of a good thing. and no, no matter how much we fight and how big our fights are : we're not taking a break and we sure aren't breaaking up, okay y qalby? "
+    },
+    {
+      "id": 4,
+      "seal": "🌸",
+      "prompt": "...are overthinking everything",
+      "animal": "duck",
+      "letter": "Habybty, I'll never look at another woman, I'll never want someone else, and I'll never ever cheat on you!\n\nLike, b zemetek fe 7d fl donya yeqdar ybos aala 7d tany w howa maah el qamar da?!\n\nAna bhbk enty w bas, w hatgawezek enty w bas, w msh aayz ay 7d fl donya de 8erek enty.\n\nAnd if you're overthinking abt smtn else, don't.\n\nKol haga hat3ady y rouhy, and I'm always here for you. you can come vent to me, let out your anger on me, fight me, cry beside me, kill me, and I'll always stay by your side in your worst before your best 😻\n\nWalahi bhbk enty bas, w hafdal ganbk tool el 3omr y hayaty."
+    },
+    {
+      "id": 5,
+      "seal": "✨",
+      "prompt": "...want me to motivate you",
+      "animal": "squirrel",
+      "letter": "Yala HOP HOP HOP!\n\nWalahi y rouhy you don't know how proud I am, ely 3amalteh da gamed gedan keep going.\n\nBs don't stop now ba2a. You have to keep going even if it gets difficult or boring or stupid or annoying, you've gone too far to stop now.\n\nI'm here for you whenever you need my help, and I'm gonna always support you and will stay by your side at all times.\n\nAnd I REALLY am so proud of you y hayaty... 💌"
+    },
+    {
+      "id": 6,
+      "seal": "🏡",
+      "prompt": "...are dreaming about our future",
+      "animal": "cat",
+      "letter": "Look baby, serious talk now...\n\nIn 2027 : I'll be 18 and you'll be 15. I'll start college and you'll be in grade 9. (don't be mad if i'm wrong, I have the memory of a jellyfish\")\n\nYour dad said no marriage till ur 20? You'll be 20 in 2032, You'll be in the 2nd year of college. I'd have gratuated this year or a year ago 7asab ana had5ol which college.\n\nKeda keda I'll work either from when I start college or on my 2nd year of college so I'll try and save as much as I can.\n\nI'll work in the cafe again so I'll get 7K a month bs I'll spend abt 2k in food and transportation so lets say abt 5k a month + dad's gonna give me an extra allowance so lets say 2k.\n\nminimum I save 4k each month : 4x12x4 = 16x12 = 192k (nqol 150k for emergencies)\nif i work for another year during 5otoba : 48k so total's gonna be 200k\n\nwe can have a humble wedding, bs it'll be gorgeous. we'll try not to overspend on our honeymoon and we'll live in a small rented studio (1 room, small bathroom, small kitchen, small or no reception). It's js gonna be for a while till we can save up showya and buy our dream house, hell even in dubai or in germany or smtn.\n\nwe'll be broke fl awl, bs that won't stop us from having fun and buying whatever we want. I'll still take you on dates, fancy and casual or even eating burgers on the streets. We'll buy a small car that we're gonna take for alot of car rides and roadtrips. I'll try make you not feel the weight of poverty and i'll end it soon dw.\n\nwhen we grow up showya (maybe in 2039 where you'll be 27 and i'll be 30) we can start trying for kids. we'll have a big house by then and good paying jobs so we can provide for the kids... idk abt you but the top 2 names i've decided on are : Laila and Salma for girls, Ali and Yassin for boys. I've dreamt of having 2 boys and a girl w the girl being the middle child or the youngest. We'll teach them everything, and we'll always be there for them, and we'll make them the happiest ever. I'll be the good daddy that takes them out and buys them candy behind their mommy's backs. I'll help them w school and friends and teach them valuable lesons, and they playing sports at a young age, idc.\n\nwe're gonna be such good parents, and you'll be the most perfect wife and mommy ever, and I promise I'll do everything I can for all of you. ❣\n\nIn my opinion, a mother should have her kids a priority over work... Before you get mad hear me out!\n\nYou'll be working till you're 7 months pregnant or smtn, then you'll take a maternity leave for until the kid goes to school, then you'll be back to work. and if we have multiple kids you'll stay at home till THE YOUNGEST goes to school. after that you can work tany bs still kids are a priority for both of us. momkn masalan you drop em off to school and i'll pick them up or smtn.\n\nto summarise everything : bhbk bhbk bhbk ya ahla janjona fl donya kolaha 😘"
+    },
+    {
+      "id": 7,
+      "seal": "🧸",
+      "prompt": "...are horny and I'm unavailable rn",
+      "animal": "duck",
+      "letter": "Oh baby... You getting wet? Is it beating rn?\n\nIt's okay. Lock your doors, drop your pants down, and start rubbing it gently. Yes, feel its warmth, feel its need for more, feel its excitement.\n\nGrab your pillow, and imagine it was me. Push it inside, rub it all around, start gently and finish hard.\n\nKeep going mommy, imagine you're with me. Imagine I'm inside you, Imagine how big it'll be. Imagine me destroying your legs. Imagine me sucking on your tits while I fuck you.... Mhm yes, feel me going in & out.\n\nYou getting wet, hayaty? I wanna taste you sm, I wanna lick your pussy sm its taste will stay in my tongue for weeeks... 👅\n\nThats it, cum for me mommy, let it all out, cum all over my dick, yes!\n\nHope you enjoyed it mommy, now clean up and rest. You deserve it."
+    },
+    {
+      "id": 8,
+      "seal": "🌷",
+      "prompt": "...think about doing smtn stupid",
+      "animal": "cat",
+      "letter": "Wow...\n\nIstg y jana if you THINK abt it I'm gonna kill you myself!\n\nJana, baby, whatever you think abt doing it's really not worth it...\n\nFirst of all : It's haram! Do you really want allah to ignore everything you're doing and praying and everything and send you straight to hell? I don't think so.\n\nSecond of all : Look how you're gonna hurt everyone around you... Your parents, Your siblings, your friends, your cousins, your teachers, me... You don't know how that'll affect everything, how that'll affect me...\n\nThird of all : If you do it, I'll do it! Azon fair and square 🤷‍♂️\n\nBaby js get that nonsense out of your head and come talk to me, I'll listen, I'll help if I can, I'll be beside you, always....\n\nI really love you sm... 💕"
+    },
+    {
+      "id": 9,
+      "seal": "🌹",
+      "prompt": "...are tired from school",
+      "animal": "squirrel",
+      "letter": "I know school can be shit, and Ik it's exhausting, and Ik it drains all your energy, bs you're almost done with it.\n\nI know you're smart, and you're gonna get straight \"A+\"s on all your tests. I believe in you.\n\nISA this all ends soon, and you go to college and... you're gonna study even more 3mtn 😐...\n\nbs after you finish school you're gonna work and you'll need all that \"nonsense\", believe me.\n\njs keep going y rouhy and I'll be here if you need help w anything (especially maths & physics)\n\nAnd I'm so proud of you y ahla janjona! 😍"
+    },
+    {
+      "id": 10,
+      "seal": "🌝",
+      "prompt": "...are going to sleep",
+      "animal": "duck",
+      "letter": "First of all : wash your face and teeth.\n\nSecond of all : I js wanna say... You don't know how much I love you, and you dont know how much I'd pay rn to sleep beside you.\n\nI wanna hug you so tight while you sleep, and kiss your forehead tol el waqt, bs istg if you take my blanket i'll push you off y haramyaya 🙂\n\nI wish you a very goodnight ya hayaty, and I hope you sleep so well. bhbk bhbk bhbkkkk ❤\n\nWhen you wake up htlaqeny mstaneky y 3omry."
+    }
+  ]
+};
+
+    // Render all envelopes into the grid
+    function renderEnvelopes() {
+      const grid = document.getElementById('envelopes-grid');
+      document.getElementById('page-subtitle').textContent = appData.subtitle;
+      
+      grid.innerHTML = appData.envelopes.map((env, index) => `
+        <button 
+          onclick="openLetterModal(${env.id}, event)" 
+          class="envelope-card group text-left rounded-2xl pt-12 pb-6 px-5 flex flex-col items-center justify-between min-h-[195px] cursor-pointer focus:outline-none focus:ring-4 focus:ring-pink-300/60"
+        >
+          <!-- Envelope Top Flap -->
+          <div class="envelope-flap"></div>
+          
+          <!-- Centered Wax Seal -->
+          <div class="wax-seal -mt-5 mb-3 shadow-md">
+            <span class="text-lg select-none">${env.seal || '💗'}</span>
+          </div>
+          
+          <!-- Prompt Label -->
+          <div class="text-center z-10 my-auto">
+            <span class="text-[11px] uppercase tracking-widest text-pink-400 font-semibold block mb-1">Open when you</span>
+            <p class="font-handwriting text-2xl sm:text-[26px] font-bold text-[#5A4348] leading-snug group-hover:text-[#C85275] transition-colors">
+              ${escapeHTML(env.prompt)}
+            </p>
+          </div>
+
+          <!-- Subtle tap hint -->
+          <span class="mt-3 text-[11px] text-[#A6868E] group-hover:text-pink-500 transition-colors flex items-center gap-1">
+            <span>Tap to open</span>
+            <span>→</span>
+          </span>
+        </button>
+      `).join('');
+    }
+
+    // Spawn gentle floating hearts when an envelope is clicked
+    function spawnFloatingHearts(x, y) {
+      const hearts = ['💗', '💖', '🌸', '✨', '💕'];
+      for (let i = 0; i < 6; i++) {
+        const el = document.createElement('div');
+        el.className = 'floating-heart text-xl';
+        el.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+        const offsetX = (Math.random() - 0.5) * 90;
+        const offsetY = (Math.random() - 0.5) * 30;
+        el.style.left = `${(x || window.innerWidth / 2) + offsetX}px`;
+        el.style.top = `${(y || window.innerHeight / 2) + offsetY}px`;
+        el.style.animationDelay = `${i * 0.08}s`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+      }
+    }
+
+    // Open Letter Modal
+    function openLetterModal(id, event) {
+      const env = appData.envelopes.find(item => item.id === id);
+      if (!env) return;
+
+      if (event && event.clientX) {
+        spawnFloatingHearts(event.clientX, event.clientY);
+      }
+
+      document.getElementById('modal-seal-icon').textContent = env.seal || '💌';
+      document.getElementById('modal-prompt-title').textContent = env.prompt;
+      document.getElementById('modal-letter-body').textContent = env.letter;
+      document.getElementById('modal-sign-off').textContent = appData.signOff;
+      document.getElementById('modal-animal-badge').innerHTML = ANIMAL_BADGES[env.animal] || ANIMAL_BADGES.cat;
+
+      const modal = document.getElementById('letter-modal');
+      const card = document.getElementById('letter-card');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      requestAnimationFrame(() => {
+        card.classList.remove('scale-95', 'opacity-0');
+        card.classList.add('scale-100', 'opacity-100');
+      });
+    }
+
+    // Close Letter Modal
+    function closeLetterModal() {
+      const modal = document.getElementById('letter-modal');
+      const card = document.getElementById('letter-card');
+      card.classList.remove('scale-100', 'opacity-100');
+      card.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }, 220);
+    }
+
+    // Close modal when clicking backdrop or pressing Escape
+    document.getElementById('letter-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'letter-modal') closeLetterModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLetterModal();
+        closeEditorModal();
+      }
+    });
+
+    // =====================================================================
+    // CUSTOMIZATION EDITOR & STANDALONE EXPORT FUNCTIONS
+    // =====================================================================
+    function openEditorModal() {
+      document.getElementById('edit-signoff').value = appData.signOff;
+      document.getElementById('edit-subtitle').value = appData.subtitle;
+      renderEditorList();
+      const modal = document.getElementById('editor-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditorModal() {
+      const modal = document.getElementById('editor-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function renderEditorList() {
+      const list = document.getElementById('editor-envelopes-list');
+      list.innerHTML = appData.envelopes.map((env, idx) => `
+        <div class="p-4 rounded-2xl border border-pink-200 bg-[#FFF9FB] space-y-3" data-env-id="${env.id}">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-bold text-pink-600 uppercase">Envelope #${idx + 1}</span>
+            ${appData.envelopes.length > 1 ? `
+              <button onclick="removeEnvelope(${env.id})" class="text-xs text-rose-500 hover:underline">Remove</button>
+            ` : ''}
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Icon</label>
+              <input type="text" class="edit-seal w-full px-2.5 py-1.5 rounded-xl border border-pink-200 text-center text-sm" value="${escapeHTML(env.seal)}">
+            </div>
+            <div class="sm:col-span-7">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Prompt ("Open when you...")</label>
+              <input type="text" class="edit-prompt w-full px-3 py-1.5 rounded-xl border border-pink-200 text-sm" value="${escapeHTML(env.prompt)}">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block text-[11px] text-[#85666D] mb-0.5">Sticker</label>
+              <select class="edit-animal w-full px-2 py-1.5 rounded-xl border border-pink-200 text-sm bg-white">
+                <option value="cat" ${env.animal === 'cat' ? 'selected' : ''}>Baby Cat</option>
+                <option value="duck" ${env.animal === 'duck' ? 'selected' : ''}>Baby Duck</option>
+                <option value="squirrel" ${env.animal === 'squirrel' ? 'selected' : ''}>Baby Squirrel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-[#85666D] mb-0.5">Your Letter to Jana</label>
+            <textarea rows="4" class="edit-letter w-full px-3 py-2 rounded-xl border border-pink-200 text-sm leading-relaxed focus:outline-none focus:border-pink-400">${escapeHTML(env.letter)}</textarea>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function syncEditorInputsToData() {
+      appData.signOff = document.getElementById('edit-signoff').value.trim() || "Forever yours ♥";
+      appData.subtitle = document.getElementById('edit-subtitle').value.trim();
+
+      const cards = document.querySelectorAll('#editor-envelopes-list > div');
+      const updated = [];
+      cards.forEach((card, index) => {
+        updated.push({
+          id: index + 1,
+          seal: card.querySelector('.edit-seal').value.trim() || '💌',
+          prompt: card.querySelector('.edit-prompt').value.trim() || '...open this',
+          animal: card.querySelector('.edit-animal').value,
+          letter: card.querySelector('.edit-letter').value
+        });
+      });
+      appData.envelopes = updated;
+    }
+
+    function addNewEnvelope() {
+      syncEditorInputsToData();
+      appData.envelopes.push({
+        id: Date.now(),
+        prompt: "...need a little extra love",
+        seal: "🌷",
+        animal: "cat",
+        letter: "Write your sweet message for Jana right here..."
+      });
+      renderEditorList();
+    }
+
+    function removeEnvelope(id) {
+      syncEditorInputsToData();
+      appData.envelopes = appData.envelopes.filter(e => e.id !== id);
+      renderEditorList();
+    }
+
+    function saveAndApplyChanges() {
+      syncEditorInputsToData();
+      renderEnvelopes();
+      closeEditorModal();
+      showToast("Preview updated with your changes! 💌");
+    }
+
+    // Export a completely self-contained HTML file with all customized letters baked in
+    function downloadStandaloneHTML() {
+      syncEditorInputsToData();
+      renderEnvelopes();
+
+      // Clone current document HTML and update the embedded appData object
+      let fullHTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+      const serializedData = JSON.stringify(appData, null, 2);
+      fullHTML = fullHTML.replace(
+        /let appData = \{[\s\S]*?\n    \};/,
+        `let appData = ${serializedData};`
+      );
+
+      const blob = new Blob([fullHTML], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'For_Jana_Open_When.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast("Downloaded 'For_Jana_Open_When.html'! Ready to send to her 🎀");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-msg');
+      toast.textContent = msg;
+      toast.classList.remove('opacity-0');
+      setTimeout(() => toast.classList.add('opacity-0'), 3200);
+    }
+
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderEnvelopes();
+    });
+  </script>
+
+</body></html>
